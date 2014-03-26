@@ -215,25 +215,26 @@ module.exports = function(_module, _dataFolder) {
   };
 
 
-  var test = _.extend({}, {
-    utils: testUtils,
-    mocker: null,
+  var utils = _.extend({}, testUtils, {
     assert: chai.assert,
     expect: chai.expect,
     should: chai.should(),
+    mocker: null
+  });
 
+  var test = _.extend({}, {
     beforeEach: function() {
-      test.mocker = sinon.sandbox.create();
+      utils.mocker = sinon.sandbox.create();
     },
 
     afterEach: function() {
-      test.mocker.restore();
+      utils.mocker.restore();
     }
   });
 
   _module.exports[path.basename(_module.filename)] = test;
 
-  return test;
+  return { test: test, utils: utils };
 };
 
 
