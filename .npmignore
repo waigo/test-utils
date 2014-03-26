@@ -1,0 +1,7 @@
+.gitignore
+node_modules/
+.idea
+*.iml
+.travis.yml
+.jshintrc
+Gruntfile.coffee
