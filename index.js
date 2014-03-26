@@ -218,17 +218,16 @@ module.exports = function(_module, _dataFolder) {
   var utils = _.extend({}, testUtils, {
     assert: chai.assert,
     expect: chai.expect,
-    should: chai.should(),
-    mocker: null
+    should: chai.should()
   });
 
   var test = _.extend({}, {
     beforeEach: function() {
-      utils.mocker = sinon.sandbox.create();
+      test.mocker = sinon.sandbox.create();
     },
 
     afterEach: function() {
-      utils.mocker.restore();
+      test.mocker.restore();
     }
   });
 
