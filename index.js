@@ -261,6 +261,23 @@ module.exports = function(_module, _dataFolder) {
 
 
 
+  /**
+   * Read a file.
+   *
+   * @param {String} filePath Path to file.
+   * 
+   * @return {Promise}
+   */
+  testUtils.readFile = function(filePath) {
+    return fs.readFileAsync(filePath, { encoding: 'utf8' })
+      .then(function(contents) {
+        return contents.toString();
+      });
+  };
+
+
+
+
 
 
   var utils = _.extend({}, testUtils, {
