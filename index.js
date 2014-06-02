@@ -68,7 +68,6 @@ module.exports = function(_module, _dataFolder) {
   };
 
 
-
   /**
    * Create test folders.
    *
@@ -81,7 +80,7 @@ module.exports = function(_module, _dataFolder) {
      */
     return mkdirpAsync(testUtils.appFolder)
       .then(function() {
-        return fs.writeFileAsync(path.join(testUtils.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
+        testUtils.writeFile(path.join(testUtils.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
       });
   };
 
@@ -136,15 +135,15 @@ module.exports = function(_module, _dataFolder) {
     return mkdirpAsync(pluginFolderPath)
       .then(function() {
         return Promise.all([
-          fs.writeFileAsync(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }'),
-          fs.writeFileAsync(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}')
+          testUtils.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }'),
+          testUtils.writeFile(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}')
         ]);
       })
       .then(function createPluginSrcFolder() {
         return mkdirpAsync(srcFolderPath);
       })
       .then(function createPluginSrcFolder(exists) {
-        return fs.writeFileAsync(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
+        return testUtils.writeFile(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
       })
       .then(function createModules() {
         return testUtils.createModules(srcFolderPath, modules, name);
@@ -198,7 +197,7 @@ module.exports = function(_module, _dataFolder) {
 
         return mkdirpAsync(folderPath)
           .then(function createModuleFile() {
-            return fs.writeFileAsync(fileName, moduleContent);
+            return testUtils.writeFile(fileName, moduleContent);
           });
       };
 
@@ -213,6 +212,55 @@ module.exports = function(_module, _dataFolder) {
 
     return promise;
   };
+
+
+
+  /**
+   * Write test package.json file.
+   * @param  {String} contents File contents.
+   * @return {Promise}
+   */
+  testUtils.writePackageJson = function(contents) {
+    return testUtils.writeFile(
+      path.join(testUtils.appFolder, '..', 'package.json'),
+      contents
+    );
+  };
+
+
+
+  /**
+   * Delete test package.json file.
+   * @return {Promise}
+   */
+  testUtils.deletePackageJson = function() {
+    var fp = path.join(testUtils.appFolder, '..', 'package.json');
+
+    return fs.existsAsync(fp)
+      .then(function(exists){
+        if (exists) {
+          return fs.unlinkAsync(fp);
+        }
+      });
+  };
+
+
+
+
+  /**
+   * Write a file.
+   *
+   * @param {String} filePath Path to file.
+   * @param {String} contents File contents
+   * 
+   * @return {Promise}
+   */
+  testUtils.writeFile = function(filePath, contents) {
+    return fs.writeFileAsync(filePath, contents);
+  };
+
+
+
 
 
   var utils = _.extend({}, testUtils, {
