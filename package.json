@@ -2,7 +2,6 @@
   "name": "waigo-test-utils",
   "version": "1.0.1",
   "description": "Test utilities for Waigo framework and associated plugins.",
-  "private": true,
   "main": "index.js",
   "scripts": {
     "test": "node --harmony `which grunt`"
