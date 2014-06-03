@@ -116,6 +116,22 @@ module.exports = function(_module, _dataFolder) {
 
 
 
+
+  /**
+   * Chmod a file.
+   *
+   * @param {String} filePath Path to file.
+   * @param {String} mode The chmod mode to set.
+   * 
+   * @return {Promise}
+   */
+  testUtils.chmodFile = function(filePath, mode) {
+    return fs.chmodAsync(filePath, mode);
+  };
+
+
+
+
   /**
    * Create a folder and its intermediate folders.
    *
