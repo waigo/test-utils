@@ -103,6 +103,20 @@ module.exports = function(_module, _dataFolder) {
 
 
   /**
+   * Delete a file.
+   *
+   * @param {String} filePath Path to file.
+   * 
+   * @return {Promise}
+   */
+  testUtils.deleteFile = function(filePath) {
+    return fs.unlinkAsync(filePath);
+  };
+
+
+
+
+  /**
    * Create a folder and its intermediate folders.
    *
    * @param {String} folder Folder to create.
