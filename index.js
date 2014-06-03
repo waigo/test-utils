@@ -68,6 +68,67 @@ module.exports = function(_module, _dataFolder) {
   };
 
 
+
+
+
+  /**
+   * Write a file.
+   *
+   * @param {String} filePath Path to file.
+   * @param {String} contents File contents
+   * 
+   * @return {Promise}
+   */
+  testUtils.writeFile = function(filePath, contents) {
+    return fs.writeFileAsync(filePath, contents);
+  };
+
+
+
+  /**
+   * Read a file.
+   *
+   * @param {String} filePath Path to file.
+   * 
+   * @return {Promise}
+   */
+  testUtils.readFile = function(filePath) {
+    return fs.readFileAsync(filePath, { encoding: 'utf8' })
+      .then(function(contents) {
+        return contents.toString();
+      });
+  };
+
+
+
+
+  /**
+   * Create a folder and its intermediate folders.
+   *
+   * @param {String} folder Folder to create.
+   * 
+   * @return {Promise}
+   */
+  testUtils.createFolder = function(folder) {
+    return mkdirpAsync(folder);
+  };
+
+
+
+  /**
+   * Delete a folder.
+   *
+   * @param {String} folder Folder to delete
+   * 
+   * @return {Promise}
+   */
+  testUtils.deleteFolder = function(folder) {
+    return rimrafAsync(folder);
+  };
+
+
+
+
   /**
    * Create test folders.
    *
@@ -78,9 +139,9 @@ module.exports = function(_module, _dataFolder) {
     node-findit fails to finish for empty directories, so we create dummy files to prevent this
     https://github.com/substack/node-findit/pull/26
      */
-    return mkdirpAsync(testUtils.appFolder)
+    return testUtils.createFolder(testUtils.appFolder)
       .then(function() {
-        testUtils.writeFile(path.join(testUtils.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
+        return testUtils.writeFile(path.join(testUtils.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
       });
   };
 
@@ -93,7 +154,7 @@ module.exports = function(_module, _dataFolder) {
    * @return {Promise}
    */
   testUtils.deleteTestFolders = function() {
-    return rimrafAsync(testUtils.appFolder)
+    return testUtils.deleteFolder(testUtils.appFolder)
       .then(function() {
         return fs.readdirAsync(testUtils.pluginsFolder)
           .then(function deletePlugins(files) {
@@ -102,7 +163,7 @@ module.exports = function(_module, _dataFolder) {
             });
             return Promise.all(
               _.map(plugins, function(plugin) {
-                return rimrafAsync(path.join(testUtils.pluginsFolder, plugin));
+                return testUtils.deleteFolder(path.join(testUtils.pluginsFolder, plugin));
               })
             );
           });
@@ -132,7 +193,7 @@ module.exports = function(_module, _dataFolder) {
     var pluginFolderPath = path.join(testUtils.pluginsFolder, name),
       srcFolderPath = path.join(pluginFolderPath, 'src');
 
-    return mkdirpAsync(pluginFolderPath)
+    return testUtils.createFolder(pluginFolderPath)
       .then(function() {
         return Promise.all([
           testUtils.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }'),
@@ -140,7 +201,7 @@ module.exports = function(_module, _dataFolder) {
         ]);
       })
       .then(function createPluginSrcFolder() {
-        return mkdirpAsync(srcFolderPath);
+        return testUtils.createFolder(srcFolderPath);
       })
       .then(function createPluginSrcFolder(exists) {
         return testUtils.writeFile(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
@@ -195,7 +256,7 @@ module.exports = function(_module, _dataFolder) {
         var fileName = path.join(srcFolder, moduleName) + '.js',
           folderPath = path.dirname(fileName);
 
-        return mkdirpAsync(folderPath)
+        return testUtils.createFolder(folderPath)
           .then(function createModuleFile() {
             return testUtils.writeFile(fileName, moduleContent);
           });
@@ -245,35 +306,6 @@ module.exports = function(_module, _dataFolder) {
   };
 
 
-
-
-  /**
-   * Write a file.
-   *
-   * @param {String} filePath Path to file.
-   * @param {String} contents File contents
-   * 
-   * @return {Promise}
-   */
-  testUtils.writeFile = function(filePath, contents) {
-    return fs.writeFileAsync(filePath, contents);
-  };
-
-
-
-  /**
-   * Read a file.
-   *
-   * @param {String} filePath Path to file.
-   * 
-   * @return {Promise}
-   */
-  testUtils.readFile = function(filePath) {
-    return fs.readFileAsync(filePath, { encoding: 'utf8' })
-      .then(function(contents) {
-        return contents.toString();
-      });
-  };
 
 
 
