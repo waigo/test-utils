@@ -8,7 +8,6 @@ const _ = require('lodash'),
   chai = require("chai"),
   fs = require('fs'),
   path = require('path'),
-  Q = require('bluebird'),
   shell = require('shelljs');
 
 chai.use(require('sinon-chai'));
