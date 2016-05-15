@@ -18,39 +18,39 @@ chai.use(require("chai-as-promised"));
 
 /** 
  * Create a new test object.
- * @param  {Object} _module  Should be __module
- * @param  {String} [_dataFolder] Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
+ * 
+ * @param  {Object} _module  Should be `module` of test file.
+ * @param {Object} [options] Additional options.
+ * @param  {String} [options.dataFolder] Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
+ * @param  {Object} [options.extraMethods] Extra methods to add to test object.
+ * 
  * @return {Object} Test object
  */
-exports.create = function(_module, _dataFolder) {
-  if (!_dataFolder) {
-    _dataFolder = path.join(process.cwd(), 'test', 'data');
-  }
+exports.create = function(_module, options) {
+  options = _.extend({
+    dataFolder: path.join(process.cwd(), 'test', 'data'),
+    extraDataAndMethods: {}
+  }, options);
+  
+  var tools = {},
+    testDataFolder = path.normalize(options.dataFolder);
 
+  tools.appFolder = path.join(testDataFolder, 'app');
+  tools.pluginsFolder = path.join(process.cwd(), 'node_modules');
 
-  var testUtils = {},
-    testDataFolder = path.normalize(_dataFolder);
-
-  testUtils.appFolder = path.join(testDataFolder, 'app');
-  testUtils.pluginsFolder = path.join(process.cwd(), 'node_modules');
-
-
-
-  _.extend(testUtils, genomatic);
-
-
-
+  /**
+   * Generator utility methods.
+   */
+  _.extend(tools, genomatic);
 
   /**
    * Write a file.
    *
    * @param {String} filePath Path to file.
    * @param {String} contents File contents
-   * 
-   * @return {Promise}
    */
-  testUtils.writeFile = function(filePath, contents) {
-    return fs.writeFileAsync(filePath, contents);
+  tools.writeFile = function(filePath, contents) {
+    fs.writeFileSync(filePath, contents);
   };
 
 
@@ -59,14 +59,9 @@ exports.create = function(_module, _dataFolder) {
    * Read a file.
    *
    * @param {String} filePath Path to file.
-   * 
-   * @return {Promise}
    */
-  testUtils.readFile = function(filePath) {
-    return fs.readFileAsync(filePath, { encoding: 'utf8' })
-      .then(function(contents) {
-        return contents.toString();
-      });
+  tools.readFile = function(filePath) {
+    return fs.readFileSync(filePath, { encoding: 'utf8' }).toString();
   };
 
 
@@ -76,11 +71,9 @@ exports.create = function(_module, _dataFolder) {
    * Delete a file.
    *
    * @param {String} filePath Path to file.
-   * 
-   * @return {Promise}
    */
-  testUtils.deleteFile = function(filePath) {
-    return fs.unlinkAsync(filePath);
+  tools.deleteFile = function(filePath) {
+    fs.unlinkSync(filePath);
   };
 
 
@@ -92,11 +85,9 @@ exports.create = function(_module, _dataFolder) {
    *
    * @param {String} filePath Path to file.
    * @param {String} mode The chmod mode to set.
-   * 
-   * @return {Promise}
    */
-  testUtils.chmodFile = function(filePath, mode) {
-    return fs.chmodAsync(filePath, mode);
+  tools.chmodFile = function(filePath, mode) {
+    fs.chmodSync(filePath, mode);
   };
 
 
@@ -109,8 +100,8 @@ exports.create = function(_module, _dataFolder) {
    * 
    * @return {Promise}
    */
-  testUtils.createFolder = function(folder) {
-    return mkdirpAsync(folder);
+  tools.createFolder = function(folder) {
+    shell.mkdir('-p', folder);
   };
 
 
@@ -122,8 +113,8 @@ exports.create = function(_module, _dataFolder) {
    * 
    * @return {Promise}
    */
-  testUtils.deleteFolder = function(folder) {
-    return rimrafAsync(folder);
+  tools.deleteFolder = function(folder) {
+    shell.rm('-rf', folder);
   };
 
 
@@ -131,18 +122,14 @@ exports.create = function(_module, _dataFolder) {
 
   /**
    * Create test folders.
-   *
-   * @return {Promise}
    */
-  testUtils.createTestFolders = function() {
+  tools.createTestFolders = function() {
     /*
     node-findit fails to finish for empty directories, so we create dummy files to prevent this
     https://github.com/substack/node-findit/pull/26
      */
-    return testUtils.createFolder(testUtils.appFolder)
-      .then(function() {
-        return testUtils.writeFile(path.join(testUtils.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
-      });
+    tools.createFolder(tools.appFolder);
+    tools.writeFile(path.join(tools.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
   };
 
 
@@ -150,24 +137,19 @@ exports.create = function(_module, _dataFolder) {
 
   /**
    * Delete test folders.
-   *
-   * @return {Promise}
    */
-  testUtils.deleteTestFolders = function() {
-    return testUtils.deleteFolder(testUtils.appFolder)
-      .then(function() {
-        return fs.readdirAsync(testUtils.pluginsFolder)
-          .then(function deletePlugins(files) {
-            var plugins = _.filter(files, function(file) {
-              return file.endsWith('_TESTPLUGIN');
-            });
-            return Q.all(
-              _.map(plugins, function(plugin) {
-                return testUtils.deleteFolder(path.join(testUtils.pluginsFolder, plugin));
-              })
-            );
-          });
-      });
+  tools.deleteTestFolders = function() {
+    tools.deleteFolder(tools.appFolder);
+
+    let files = fs.readdirSync(tools.pluginsFolder);
+
+    let plugins = _.filter(files, function(file) {
+      return file.endsWith('_TESTPLUGIN');
+    });
+
+    _.each(plugins, function(plugin) {
+      tools.deleteFolder(path.join(tools.pluginsFolder, plugin));
+    })
   };
 
 
@@ -182,33 +164,25 @@ exports.create = function(_module, _dataFolder) {
    *
    * @param name {String} name of plugin to create. Should be suffixed with '_TESTPLUGIN';
    * @param [modules] {Array|Object} CommonJS modules to create within the plugin.
-   *
-   * @return {Promise}
    */
-  testUtils.createPluginModules = function(name, modules) {
+  tools.createPluginModules = function(name, modules) {
     if (!name.endsWith('_TESTPLUGIN')) {
       throw new Error('Test plugin name has incorrect suffix');
     }
 
-    var pluginFolderPath = path.join(testUtils.pluginsFolder, name),
+    var pluginFolderPath = path.join(tools.pluginsFolder, name),
       srcFolderPath = path.join(pluginFolderPath, 'src');
 
-    return testUtils.createFolder(pluginFolderPath)
-      .then(function() {
-        return Q.all([
-          testUtils.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }'),
-          testUtils.writeFile(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}')
-        ]);
-      })
-      .then(function createPluginSrcFolder() {
-        return testUtils.createFolder(srcFolderPath);
-      })
-      .then(function createPluginSrcFolder(exists) {
-        return testUtils.writeFile(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
-      })
-      .then(function createModules() {
-        return testUtils.createModules(srcFolderPath, modules, name);
-      });
+    tools.createFolder(pluginFolderPath);
+
+    tools.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }');
+    tools.writeFile(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}');
+
+    tools.createFolder(srcFolderPath);
+
+    tools.writeFile(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
+
+    tools.createModules(srcFolderPath, modules, name);
   };
 
 
@@ -218,11 +192,9 @@ exports.create = function(_module, _dataFolder) {
    * Create modules in the app folder tree.
    *
    * @param [modules] {Array|Object} CommonJS modules to create within the app.
-   *
-   * @return {Promise}
    */
-  testUtils.createAppModules = function(modules) {
-    return testUtils.createModules(testUtils.appFolder, modules, 'app');
+  tools.createAppModules = function(modules) {
+    tools.createModules(tools.appFolder, modules, 'app');
   };
 
 
@@ -236,12 +208,8 @@ exports.create = function(_module, _dataFolder) {
    * @param srcFolder {String} folder in which to create the module. Expected to exist.
    * @param modules {Object|Array} CommonJS modules to create.
    * @param defaultContent {String} the default content to use for a module if none provided.
-   *
-   * @return {Promise}
    */
-  testUtils.createModules = function(srcFolder, modules, defaultContent) {
-    var promise = Q.resolve();
-
+  tools.createModules = function(srcFolder, modules, defaultContent) {
     if (modules) {
       // if an array then generate default module content
       if (_.isArray(modules)) {
@@ -256,22 +224,17 @@ exports.create = function(_module, _dataFolder) {
         var fileName = path.join(srcFolder, moduleName) + '.js',
           folderPath = path.dirname(fileName);
 
-        return testUtils.createFolder(folderPath)
-          .then(function createModuleFile() {
-            return testUtils.writeFile(fileName, moduleContent);
-          });
+        tools.createFolder(folderPath);
+
+        tools.writeFile(fileName, moduleContent);
       };
 
       // sequentially create each module - this avoids conflicting async calls to mkdir() for the same folder
       _.each(modules, function(moduleContent, moduleName) {
-        promise = promise.then(function() {
-          return __createModule(moduleName, modules[moduleName]);
-        });
+        __createModule(moduleName, modules[moduleName]);
       });
 
     } // if modules set
-
-    return promise;
   };
 
 
@@ -279,11 +242,10 @@ exports.create = function(_module, _dataFolder) {
   /**
    * Write test package.json file.
    * @param  {String} contents File contents.
-   * @return {Promise}
    */
-  testUtils.writePackageJson = function(contents) {
-    return testUtils.writeFile(
-      path.join(testUtils.appFolder, '..', 'package.json'),
+  tools.writePackageJson = function(contents) {
+    tools.writeFile(
+      path.join(tools.appFolder, '..', 'package.json'),
       contents
     );
   };
@@ -292,21 +254,25 @@ exports.create = function(_module, _dataFolder) {
 
   /**
    * Delete test package.json file.
-   * @return {Promise}
    */
-  testUtils.deletePackageJson = function() {
-    var fp = path.join(testUtils.appFolder, '..', 'package.json');
+  tools.deletePackageJson = function() {
+    var fp = path.join(tools.appFolder, '..', 'package.json');
 
-    return fs.existsAsync(fp)
-      .then(function(exists){
-        if (exists) {
-          return fs.unlinkAsync(fp);
-        }
-      });
+    shell.rm('-f', fp);
   };
 
 
   const tests = {};
+
+
+  _addDataAndMethods = function(_this, _obj) {
+    for (let k in _obj) {
+      _this[k] = _.isFunction(_obj[k]) 
+        ? genomatic.bind(_obj[k], this)
+        : _obj[k];
+    }
+  }
+
 
   _module.exports[path.basename(_module.filename)] = _.extend({}, {
     beforeEach: function() {
@@ -316,13 +282,8 @@ exports.create = function(_module, _dataFolder) {
       this.expect = chai.expect;
       this.should = chai.should();
 
-      for (let k in testUtils) {
-        this[k] = _.bindGen(tools[k], this);
-      }
-
-      _.each(testUtils, (m, k) => {
-        this[k] = _.bind(m;
-      });
+      _addDataAndMethods(this, tools);
+      _addDataAndMethods(this, options.extraDataAndMethods);
     },
 
     afterEach: function() {
