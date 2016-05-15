@@ -1,7 +1,13 @@
-.gitignore
-node_modules/
+# node
+node_modules
+npm-debug.log
+
+# IntelliJ
 .idea
 *.iml
+
+# build
 .travis.yml
-.jshintrc
-Gruntfile.coffee
+
+# vcs
+.gitignore

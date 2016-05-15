@@ -1,41 +1,32 @@
-var _ = require('lodash'),
+// enable Mocha test functions to be generators
+require('co-mocha');
+
+const _ = require('lodash'),
   co = require('co'),
-  mkdirp = require('mkdirp'),
   sinon = require('sinon'),
+  genomatic = require('genomatic'),
   chai = require("chai"),
   fs = require('fs'),
   path = require('path'),
-  Promise = require('bluebird'),
-  rimraf = require('rimraf');
-
+  Q = require('bluebird'),
+  shell = require('shelljs');
 
 chai.use(require('sinon-chai'));
 chai.use(require("chai-as-promised"));
 
 
-fs = Promise.promisifyAll(fs);
-fs.existsAsync = Promise.promisify(function(file, cb) {
-  fs.exists(file, function(exists) {
-    cb(null, exists);
-  });
-});
-
-
-var rimrafAsync = Promise.promisify(rimraf);
-var mkdirpAsync = Promise.promisify(mkdirp);
-
 
 /** 
  * Create a new test object.
  * @param  {Object} _module  Should be __module
- * @param  {String} _dataFolder Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
+ * @param  {String} [_dataFolder] Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
  * @return {Object} Test object
  */
-module.exports = function(_module, _dataFolder) {
-
+exports.create = function(_module, _dataFolder) {
   if (!_dataFolder) {
     _dataFolder = path.join(process.cwd(), 'test', 'data');
   }
+
 
   var testUtils = {},
     testDataFolder = path.normalize(_dataFolder);
@@ -44,29 +35,8 @@ module.exports = function(_module, _dataFolder) {
   testUtils.pluginsFolder = path.join(process.cwd(), 'node_modules');
 
 
-  /**
-   * Get whether given function is a generator function.
-   * @return {boolean} true if so; false otherwise
-   */
-  testUtils.isGeneratorFunction = function(obj) {
-    return obj && obj.constructor && 'GeneratorFunction' === obj.constructor.name;
-  };
 
-
-
-
-  /**
-   * Spawn a Bluebird + co coroutine around given generator function.
-   * @return {Function} Function which returns a Promise.
-   */
-  testUtils.spawn = function(generatorFunction, thisObject, arg1) {
-    var args = _.toArray(arguments).slice(2);
-    
-    return Promise.promisify(co(function*() {
-      return yield generatorFunction.apply(thisObject, args);
-    }))();
-  };
-
+  _.extend(testUtils, genomatic);
 
 
 
@@ -191,7 +161,7 @@ module.exports = function(_module, _dataFolder) {
             var plugins = _.filter(files, function(file) {
               return file.endsWith('_TESTPLUGIN');
             });
-            return Promise.all(
+            return Q.all(
               _.map(plugins, function(plugin) {
                 return testUtils.deleteFolder(path.join(testUtils.pluginsFolder, plugin));
               })
@@ -225,7 +195,7 @@ module.exports = function(_module, _dataFolder) {
 
     return testUtils.createFolder(pluginFolderPath)
       .then(function() {
-        return Promise.all([
+        return Q.all([
           testUtils.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }'),
           testUtils.writeFile(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}')
         ]);
@@ -270,7 +240,7 @@ module.exports = function(_module, _dataFolder) {
    * @return {Promise}
    */
   testUtils.createModules = function(srcFolder, modules, defaultContent) {
-    var promise = Promise.resolve();
+    var promise = Q.resolve();
 
     if (modules) {
       // if an array then generate default module content
@@ -336,31 +306,32 @@ module.exports = function(_module, _dataFolder) {
   };
 
 
+  const tests = {};
 
-
-
-
-
-
-  var utils = _.extend({}, testUtils, {
-    assert: chai.assert,
-    expect: chai.expect,
-    should: chai.should()
-  });
-
-  var test = _.extend({}, {
+  _module.exports[path.basename(_module.filename)] = _.extend({}, {
     beforeEach: function() {
       test.mocker = sinon.sandbox.create();
+
+      this.assert = chai.assert;
+      this.expect = chai.expect;
+      this.should = chai.should();
+
+      for (let k in testUtils) {
+        this[k] = _.bindGen(tools[k], this);
+      }
+
+      _.each(testUtils, (m, k) => {
+        this[k] = _.bind(m;
+      });
     },
 
     afterEach: function() {
       test.mocker.restore();
-    }
+    },
+    tests: tests,
   });
 
-  _module.exports[path.basename(_module.filename)] = test;
-
-  return { test: test, utils: utils };
+  return tests;
 };
 
 
