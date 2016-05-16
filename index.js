@@ -1,6 +1,3 @@
-// enable Mocha test functions to be generators
-require('co-mocha');
-
 const _ = require('lodash'),
   co = require('co'),
   sinon = require('sinon'),
@@ -18,14 +15,14 @@ chai.use(require("chai-as-promised"));
 /** 
  * Create a new test object.
  * 
- * @param  {Object} _module  Should be `module` of test file.
+ * @param {Object} _this The `this` context for each function.
  * @param {Object} [options] Additional options.
  * @param  {String} [options.dataFolder] Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
  * @param  {Object} [options.extraMethods] Extra methods to add to test object.
  * 
  * @return {Object} Test object
  */
-exports.create = function(_module, options) {
+function getTools (_this, options) {
   options = _.extend({
     dataFolder: path.join(process.cwd(), 'test', 'data'),
     extraDataAndMethods: {}
@@ -237,7 +234,6 @@ exports.create = function(_module, options) {
   };
 
 
-
   /**
    * Write test package.json file.
    * @param  {String} contents File contents.
@@ -250,7 +246,6 @@ exports.create = function(_module, options) {
   };
 
 
-
   /**
    * Delete test package.json file.
    */
@@ -261,37 +256,59 @@ exports.create = function(_module, options) {
   };
 
 
-  const tests = {};
+  let extra = options.extraDataAndMethods;
 
-
-  _addDataAndMethods = function(_this, _obj) {
-    for (let k in _obj) {
-      _this[k] = _.isFunction(_obj[k]) 
-        ? genomatic.bind(_obj[k], this)
-        : _obj[k];
-    }
+  for (let k in extra) {
+    tools[k] = _.isFunction(extra[k]) 
+      ? genomatic.bind(extra[k], _this)
+      : extra[k];
   }
 
+  return tools;
+};
 
-  _module.exports[path.basename(_module.filename)] = _.extend({}, {
+
+
+exports.mocha = function(_module, options) {
+  const tests = {};
+
+  _module.exports[path.basename(_module.filename)] = {
     beforeEach: function() {
-      test.mocker = sinon.sandbox.create();
+      this.mocker = sinon.sandbox.create();
 
       this.assert = chai.assert;
       this.expect = chai.expect;
       this.should = chai.should();
 
-      _addDataAndMethods(this, tools);
-      _addDataAndMethods(this, options.extraDataAndMethods);
+      _.extend(this, getTools(this, options));
     },
-
     afterEach: function() {
-      test.mocker.restore();
+      this.mocker.restore();
     },
     tests: tests,
-  });
+  };
 
   return tests;
+};
+
+
+
+exports.ava = function(avaTest, options) {
+  avaTest.beforeEach(function(t) {
+    t.mocker = sinon.sandbox.create();
+
+    t.assert = chai.assert;
+    t.expect = chai.expect;
+    t.should = chai.should();
+
+    _.extend(t, getTools(t, options));
+  });
+
+  avaTest.afterEach(function(t) {
+    t.mocker.restore();    
+  });
+
+  return avaTest;
 };
 
 
