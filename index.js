@@ -1,3 +1,5 @@
+"use strict";
+
 const _ = require('lodash'),
   co = require('co'),
   sinon = require('sinon'),
@@ -46,6 +48,10 @@ function getTools (_this, options) {
    * @param {String} contents File contents
    */
   tools.writeFile = function(filePath, contents) {
+    let dir = path.dirname(filePath);
+
+    tools.createFolder(dir);
+
     fs.writeFileSync(filePath, contents);
   };
 
@@ -295,17 +301,17 @@ exports.mocha = function(_module, options) {
 
 exports.ava = function(avaTest, options) {
   avaTest.beforeEach(function(t) {
-    t.mocker = sinon.sandbox.create();
+    t.context.mocker = sinon.sandbox.create();
 
-    t.assert = chai.assert;
-    t.expect = chai.expect;
-    t.should = chai.should();
+    t.context.assert = chai.assert;
+    t.context.expect = chai.expect;
+    t.context.should = chai.should();
 
-    _.extend(t, getTools(t, options));
+    _.extend(t.context, getTools(t.context, options));
   });
 
   avaTest.afterEach(function(t) {
-    t.mocker.restore();    
+    t.context.mocker.restore();    
   });
 
   return avaTest;
