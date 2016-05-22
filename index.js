@@ -262,6 +262,67 @@ function getTools (_this, options) {
   };
 
 
+
+  tools.clearDb = function*(modelName) {
+    let models;
+
+    if (modelName) {
+      models = [modelName];
+    } else {
+      models = _.keys(this.app.models);
+    }
+
+    for (let model of models) {
+      yield this.app.models[model].rawQry().delete().run();
+    }
+  };
+
+
+
+  tools.initApp = function*() {
+    waigo.reset();
+
+    yield waigo.init({
+      appFolder: this.appFolder,
+    });
+
+    this.Application = waigo.load('application');
+    this.app = this.Application.app;
+  };
+
+
+
+  tools.startApp = function*(config) {
+    config = _.extend({
+      logging: {
+        category: "test",
+        minLevel: 'DEBUG',
+        appenders: [],
+      },      
+      db: {
+        main: {
+          type: 'rethinkdb',
+          serverConfig: {
+            db: 'waigo_test',
+            servers: [
+              {
+                host: '127.0.0.1',
+                port: 28015,
+              },
+            ],
+          },
+        },
+      },
+    }, config);
+
+    yield this.Application.start({
+      postConfig: (cfg) => {
+        _.extend(cfg, config);
+      },
+    });
+  };
+
+
   let extra = options.extraDataAndMethods;
 
   for (let k in extra) {
@@ -272,6 +333,8 @@ function getTools (_this, options) {
 
   return tools;
 };
+
+
 
 
 
