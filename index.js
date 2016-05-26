@@ -34,6 +34,7 @@ function getTools (_this, options) {
     testDataFolder = path.normalize(options.dataFolder);
 
   tools.appFolder = path.join(testDataFolder, 'app');
+  tools.publicFolder = path.join(testDataFolder, 'public');
   tools.pluginsFolder = path.join(process.cwd(), 'node_modules');
 
   /**
@@ -131,6 +132,7 @@ function getTools (_this, options) {
     https://github.com/substack/node-findit/pull/26
      */
     tools.createFolder(tools.appFolder);
+    tools.createFolder(tools.publicFolder);
     tools.writeFile(path.join(tools.appFolder, 'README'), 'The presence of this file ensures that node-findit works');
   };
 
@@ -141,6 +143,7 @@ function getTools (_this, options) {
    * Delete test folders.
    */
   tools.deleteTestFolders = function() {
+    tools.deleteFolder(tools.publicFolder);
     tools.deleteFolder(tools.appFolder);
 
     let files = fs.readdirSync(tools.pluginsFolder);
@@ -173,6 +176,7 @@ function getTools (_this, options) {
     }
 
     var pluginFolderPath = path.join(tools.pluginsFolder, name),
+      publicFolderPath = path.join(pluginFolderPath, 'public'),
       srcFolderPath = path.join(pluginFolderPath, 'src');
 
     tools.createFolder(pluginFolderPath);
@@ -180,6 +184,7 @@ function getTools (_this, options) {
     tools.writeFile(path.join(pluginFolderPath, 'package.json'), '{ "name": "' + name + '", "version": "0.0.1" }');
     tools.writeFile(path.join(pluginFolderPath, 'index.js'), 'module.exports = {}');
 
+    tools.createFolder(publicFolderPath);
     tools.createFolder(srcFolderPath);
 
     tools.writeFile(path.join(srcFolderPath, 'README'), 'The presence of this file ensures that node-findit works');
@@ -287,12 +292,12 @@ function getTools (_this, options) {
 
 
 
-  tools.initApp = function*() {
+  tools.initApp = function*(initOptions) {
     waigo.reset();
 
-    yield waigo.init({
+    yield waigo.init(_.extend({
       appFolder: this.appFolder,
-    });
+    }, initOptions));
 
     this.Application = waigo.load('application');
     this.app = this.Application.app;
