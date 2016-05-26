@@ -223,7 +223,13 @@ function getTools (_this, options) {
       }
 
       var __createModule = function(moduleName, moduleContent) {
-        var fileName = path.join(srcFolder, moduleName) + '.js',
+        var extName = path.extname(moduleName);
+
+        if (!extName.length) {
+          extName = '.js';
+        }
+
+        var fileName = path.join(srcFolder, moduleName) + extName,
           folderPath = path.dirname(fileName);
 
         tools.createFolder(folderPath);
@@ -263,11 +269,13 @@ function getTools (_this, options) {
 
 
 
-  tools.clearDb = function*(modelName) {
+  tools.clearDb = function*() {
     let models;
 
-    if (modelName) {
-      models = [modelName];
+    let modelNames = _.flatten(_.toArray(arguments));
+
+    if (modelNames.length) {
+      models = modelNames;
     } else {
       models = _.keys(this.app.models);
     }
@@ -341,7 +349,7 @@ function getTools (_this, options) {
 exports.mocha = function(_module, options) {
   const tests = {};
 
-  _module.exports[path.basename(_module.filename)] = {
+  _module.exports[options.name || path.basename(_module.filename)] = {
     beforeEach: function() {
       this.mocker = sinon.sandbox.create();
 
