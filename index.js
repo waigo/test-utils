@@ -336,6 +336,14 @@ function getTools (_this, options) {
   };
 
 
+
+  tools.shutdownApp = function*() {
+    if (this.Application) {
+      yield this.Application.shutdown();
+    }
+  };
+
+
   let extra = options.extraDataAndMethods;
 
   for (let k in extra) {
