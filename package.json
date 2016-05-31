@@ -1,6 +1,6 @@
 {
   "name": "waigo-test-utils",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Test utilities for Waigo framework and associated plugins.",
   "main": "index.js",
   "repository": {
