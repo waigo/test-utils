@@ -70,6 +70,24 @@ function getTools (_this, options) {
 
 
 
+  /**
+   * Check if a file exists
+   *
+   * @param {String} filePath Path to file.
+   * 
+   * @return {Boolean} true if exists, false otherwise
+   */
+  tools.fileExists = function(filePath) {
+    try {
+      fs.accessSync(filePath, fs.F_OK);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+
+
 
   /**
    * Delete a file.
@@ -283,11 +301,11 @@ function getTools (_this, options) {
     if (modelNames.length) {
       models = modelNames;
     } else {
-      models = _.keys(this.app.models);
+      models = _.keys(this.App.models);
     }
 
     for (let model of models) {
-      yield this.app.models[model].rawQry().delete().run();
+      yield this.App.models[model].rawQry().delete().run();
     }
   };
 
@@ -300,8 +318,7 @@ function getTools (_this, options) {
       appFolder: this.appFolder,
     }, initOptions));
 
-    this.Application = waigo.load('application');
-    this.app = this.Application.app;
+    waigo.App = this.App = new (waigo.load('application'));
   };
 
 
@@ -331,7 +348,7 @@ function getTools (_this, options) {
       },
     }, config);
 
-    yield this.Application.start({
+    yield this.App.start({
       postConfig: (cfg) => {
         _.extend(cfg, config);
       },
@@ -341,8 +358,8 @@ function getTools (_this, options) {
 
 
   tools.shutdownApp = function*() {
-    if (this.Application) {
-      yield this.Application.shutdown();
+    if (this.App) {
+      yield this.App.shutdown();
     }
   };
 
@@ -353,7 +370,7 @@ function getTools (_this, options) {
       url = `/${url}`;
     }
 
-    return got(this.app.config.baseURL + url, options);
+    return got(this.App.config.baseURL + url, options);
   };
 
 
