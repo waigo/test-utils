@@ -3,6 +3,7 @@
 const _ = require('lodash'),
   co = require('co'),
   sinon = require('sinon'),
+  got = require('got'),
   genomatic = require('genomatic'),
   chai = require("chai"),
   fs = require('fs'),
@@ -307,6 +308,8 @@ function getTools (_this, options) {
 
   tools.startApp = function*(config) {
     config = _.extend({
+      port: 33211,
+      baseURL: 'http://localhost:33211',
       logging: {
         category: "test",
         minLevel: 'DEBUG',
@@ -344,6 +347,19 @@ function getTools (_this, options) {
   };
 
 
+
+  tools.fetch = function(url, options) {
+    if ('/' !== url.charAt(0)) {
+      url = `/${url}`;
+    }
+
+    return got(this.app.config.baseURL + url, options);
+  };
+
+
+
+
+
   let extra = options.extraDataAndMethods;
 
   for (let k in extra) {
@@ -354,7 +370,6 @@ function getTools (_this, options) {
 
   return tools;
 };
-
 
 
 
