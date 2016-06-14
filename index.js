@@ -28,15 +28,18 @@ chai.use(require("chai-as-promised"));
 function getTools (_this, options) {
   options = _.extend({
     dataFolder: path.join(process.cwd(), 'test', 'data'),
+    appFolder: null,
+    publicFolder: null,
+    pluginsFolder: null,
     extraDataAndMethods: {}
   }, options);
   
   var tools = {},
     testDataFolder = path.normalize(options.dataFolder);
 
-  tools.appFolder = path.join(testDataFolder, 'app');
-  tools.publicFolder = path.join(testDataFolder, 'public');
-  tools.pluginsFolder = path.join(process.cwd(), 'node_modules');
+  tools.appFolder = options.appFolder || path.join(testDataFolder, 'src');
+  tools.publicFolder = options.publicFolder || path.join(testDataFolder, 'public');
+  tools.pluginsFolder = options.pluginsFolder || path.join(process.cwd(), 'node_modules');
 
   /**
    * Generator utility methods.
