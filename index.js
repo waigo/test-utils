@@ -15,14 +15,14 @@ chai.use(require("chai-as-promised"));
 
 
 
-/** 
+/**
  * Create a new test object.
- * 
+ *
  * @param {Object} _this The `this` context for each function.
  * @param {Object} [options] Additional options.
  * @param  {String} [options.dataFolder] Should be path to test data folder. If ommitted then assumed to be at: `process.cwd()/test/data`
  * @param  {Object} [options.extraMethods] Extra methods to add to test object.
- * 
+ *
  * @return {Object} Test object
  */
 function getTools (_this, options) {
@@ -33,7 +33,7 @@ function getTools (_this, options) {
     pluginsFolder: null,
     extraDataAndMethods: {}
   }, options);
-  
+
   var tools = {},
     testDataFolder = path.normalize(options.dataFolder);
 
@@ -77,7 +77,7 @@ function getTools (_this, options) {
    * Check if a file exists
    *
    * @param {String} filePath Path to file.
-   * 
+   *
    * @return {Boolean} true if exists, false otherwise
    */
   tools.fileExists = function(filePath) {
@@ -122,7 +122,7 @@ function getTools (_this, options) {
    * Create a folder and its intermediate folders.
    *
    * @param {String} folder Folder to create.
-   * 
+   *
    * @return {Promise}
    */
   tools.createFolder = function(folder) {
@@ -135,7 +135,7 @@ function getTools (_this, options) {
    * Delete a folder.
    *
    * @param {String} folder Folder to delete
-   * 
+   *
    * @return {Promise}
    */
   tools.deleteFolder = function(folder) {
@@ -334,7 +334,7 @@ function getTools (_this, options) {
         category: "test",
         minLevel: 'DEBUG',
         appenders: [],
-      },      
+      },
       db: {
         main: {
           type: 'rethinkdb',
@@ -383,7 +383,7 @@ function getTools (_this, options) {
   let extra = options.extraDataAndMethods;
 
   for (let k in extra) {
-    tools[k] = _.isFunction(extra[k]) 
+    tools[k] = _.isFunction(extra[k])
       ? genomatic.bind(extra[k], _this)
       : extra[k];
   }
@@ -395,6 +395,8 @@ function getTools (_this, options) {
 
 
 exports.mocha = function(_module, options) {
+  options = options || {}
+
   const tests = {};
 
   _module.exports[options.name || path.basename(_module.filename)] = {
@@ -419,6 +421,8 @@ exports.mocha = function(_module, options) {
 
 
 exports.ava = function(avaTest, options) {
+  options = options || {}
+
   avaTest.beforeEach(function(t) {
     t.context.mocker = sinon.sandbox.create();
 
@@ -430,11 +434,8 @@ exports.ava = function(avaTest, options) {
   });
 
   avaTest.afterEach(function(t) {
-    t.context.mocker.restore();    
+    t.context.mocker.restore();
   });
 
   return avaTest;
 };
-
-
-
