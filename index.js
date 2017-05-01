@@ -5,14 +5,12 @@ const _ = require('lodash'),
   sinon = require('sinon'),
   got = require('got'),
   genomatic = require('genomatic'),
-  chai = require("chai"),
   fs = require('fs'),
   path = require('path'),
   shell = require('shelljs');
 
-chai.use(require('sinon-chai'));
-chai.use(require("chai-as-promised"));
-
+require('must/register')
+global.expect = require('must')
 
 
 /**
@@ -400,10 +398,7 @@ exports.mocha = function(_module, waigo, options) {
   _module.exports[options.name || path.basename(_module.filename)] = {
     beforeEach: function() {
       this.mocker = sinon.sandbox.create();
-
       this.waigo = waigo
-      this.expect = chai.expect;
-
       _.extend(this, getTools(this, options));
     },
     afterEach: function() {
@@ -423,9 +418,6 @@ exports.ava = function(avaTest, waigo, options) {
   avaTest.beforeEach(function(t) {
     t.context.waigo = waigo
     t.context.mocker = sinon.sandbox.create();
-
-    t.context.expect = chai.expect;
-
     _.extend(t.context, getTools(t.context, options));
   });
 
