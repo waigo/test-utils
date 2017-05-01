@@ -55,7 +55,7 @@ function getTools (_this, options) {
    * @param {String} contents File contents
    */
   tools.writeFile = function(filePath, contents) {
-    let dir = path.dirname(filePath);
+    const dir = path.dirname(filePath);
 
     tools.createFolder(dir);
 
@@ -170,9 +170,9 @@ function getTools (_this, options) {
     tools.deleteFolder(tools.publicFolder);
     tools.deleteFolder(tools.appFolder);
 
-    let files = fs.readdirSync(tools.pluginsFolder);
+    const files = fs.readdirSync(tools.pluginsFolder);
 
-    let plugins = _.filter(files, function(file) {
+    const plugins = _.filter(files, function(file) {
       return file.endsWith('_TESTPLUGIN');
     });
 
@@ -299,9 +299,9 @@ function getTools (_this, options) {
 
 
   tools.clearDb = function*() {
-    let models;
+    const modelNames = _.flatten(_.toArray(arguments));
 
-    let modelNames = _.flatten(_.toArray(arguments));
+    let models
 
     if (modelNames.length) {
       models = modelNames;
@@ -309,7 +309,7 @@ function getTools (_this, options) {
       models = _.keys(this.App.models);
     }
 
-    for (let model of models) {
+    for (const model of models) {
       yield this.App.models[model].rawQry().delete().run();
     }
   };
@@ -378,13 +378,9 @@ function getTools (_this, options) {
     return got(this.App.config.baseURL + url, options);
   };
 
+  const extra = options.extraDataAndMethods;
 
-
-
-
-  let extra = options.extraDataAndMethods;
-
-  for (let k in extra) {
+  for (const k in extra) {
     tools[k] = _.isFunction(extra[k])
       ? genomatic.bind(extra[k], _this)
       : extra[k];
