@@ -376,6 +376,22 @@ function getTools (_this, options) {
     return got(this.App.config.baseURL + url, options);
   };
 
+
+  /**
+   * Wrap given generation function and/or Promise in a Promise.
+   *
+   * This is useful for testing the results of async calls elegantly using an
+   * assertion library.
+   *
+   * @param  {*} genOrPromiseFn
+   * @return {Promise}
+   */
+  tools.awaitAsync = function (genOrPromiseFn) {
+    return co(function *() {
+      return yield genOrPromiseFn
+    })
+  }
+
   const extra = options.extraDataAndMethods;
 
   for (const k in extra) {
