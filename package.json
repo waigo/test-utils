@@ -1,6 +1,6 @@
 {
   "name": "waigo-test-utils",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "Test utilities for Waigo framework and associated plugins.",
   "main": "index.js",
   "repository": {
@@ -32,7 +32,7 @@
     "sinon-chai": "^2.8.0"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=6.0.0"
   },
   "engine-strict": true,
   "readmeFilename": "README.md"

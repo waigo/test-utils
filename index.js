@@ -26,6 +26,8 @@ chai.use(require("chai-as-promised"));
  * @return {Object} Test object
  */
 function getTools (_this, options) {
+  const waigo = _this.waigo
+
   options = _.extend({
     dataFolder: path.join(process.cwd(), 'test', 'data'),
     appFolder: null,
@@ -34,7 +36,7 @@ function getTools (_this, options) {
     extraDataAndMethods: {}
   }, options);
 
-  var tools = {},
+  const tools = {},
     testDataFolder = path.normalize(options.dataFolder);
 
   tools.appFolder = options.appFolder || path.join(testDataFolder, 'src');
@@ -197,7 +199,7 @@ function getTools (_this, options) {
       throw new Error('Test plugin name has incorrect suffix');
     }
 
-    var pluginFolderPath = path.join(tools.pluginsFolder, name),
+    const pluginFolderPath = path.join(tools.pluginsFolder, name),
       publicFolderPath = path.join(pluginFolderPath, 'public'),
       srcFolderPath = path.join(pluginFolderPath, 'src');
 
@@ -242,21 +244,21 @@ function getTools (_this, options) {
     if (modules) {
       // if an array then generate default module content
       if (_.isArray(modules)) {
-        var moduleContent = _.map(modules, function(moduleName) {
+        const moduleContent = _.map(modules, function(moduleName) {
           return 'module.exports="' + defaultContent + '";';
         });
 
         modules = _.zipObject(modules, moduleContent);
       }
 
-      var __createModule = function(moduleName, moduleContent) {
-        var extName = path.extname(moduleName);
+      const __createModule = function(moduleName, moduleContent) {
+        const extName = path.extname(moduleName);
 
         if (!extName.length) {
           extName = '.js';
         }
 
-        var fileName = path.join(srcFolder, moduleName) + extName,
+        const fileName = path.join(srcFolder, moduleName) + extName,
           folderPath = path.dirname(fileName);
 
         tools.createFolder(folderPath);
@@ -289,7 +291,7 @@ function getTools (_this, options) {
    * Delete test package.json file.
    */
   tools.deletePackageJson = function() {
-    var fp = path.join(tools.appFolder, '..', 'package.json');
+    const fp = path.join(tools.appFolder, '..', 'package.json');
 
     shell.rm('-f', fp);
   };
@@ -330,11 +332,11 @@ function getTools (_this, options) {
     config = _.extend({
       port: 33211,
       baseURL: 'http://localhost:33211',
-      logging: {
-        category: "test",
-        minLevel: 'DEBUG',
-        appenders: [],
-      },
+      // logging: {
+      //   category: "test",
+      //   minLevel: 'DEBUG',
+      //   appenders: [],
+      // },
       db: {
         main: {
           type: 'rethinkdb',
@@ -394,7 +396,7 @@ function getTools (_this, options) {
 
 
 
-exports.mocha = function(_module, options) {
+exports.mocha = function(_module, waigo, options) {
   options = options || {}
 
   const tests = {};
@@ -403,6 +405,7 @@ exports.mocha = function(_module, options) {
     beforeEach: function() {
       this.mocker = sinon.sandbox.create();
 
+      this.waigo = waigo
       this.assert = chai.assert;
       this.expect = chai.expect;
       this.should = chai.should();
@@ -420,10 +423,11 @@ exports.mocha = function(_module, options) {
 
 
 
-exports.ava = function(avaTest, options) {
+exports.ava = function(avaTest, waigo, options) {
   options = options || {}
 
   avaTest.beforeEach(function(t) {
+    t.context.waigo = waigo
     t.context.mocker = sinon.sandbox.create();
 
     t.context.assert = chai.assert;
