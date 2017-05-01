@@ -402,9 +402,7 @@ exports.mocha = function(_module, waigo, options) {
       this.mocker = sinon.sandbox.create();
 
       this.waigo = waigo
-      this.assert = chai.assert;
       this.expect = chai.expect;
-      this.should = chai.should();
 
       _.extend(this, getTools(this, options));
     },
@@ -426,9 +424,7 @@ exports.ava = function(avaTest, waigo, options) {
     t.context.waigo = waigo
     t.context.mocker = sinon.sandbox.create();
 
-    t.context.assert = chai.assert;
     t.context.expect = chai.expect;
-    t.context.should = chai.should();
 
     _.extend(t.context, getTools(t.context, options));
   });
