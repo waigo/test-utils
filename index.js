@@ -296,24 +296,6 @@ function getTools (_this, options) {
 
 
 
-  tools.clearDb = function*() {
-    const modelNames = _.flatten(_.toArray(arguments));
-
-    let models
-
-    if (modelNames.length) {
-      models = modelNames;
-    } else {
-      models = _.keys(this.App.models);
-    }
-
-    for (const model of models) {
-      yield this.App.models[model].rawQry().delete().run();
-    }
-  };
-
-
-
   tools.initApp = function*(initOptions) {
     waigo.reset();
 
