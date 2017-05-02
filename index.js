@@ -250,7 +250,7 @@ function getTools (_this, options) {
       }
 
       const __createModule = function(moduleName, moduleContent) {
-        const extName = path.extname(moduleName);
+        let extName = path.extname(moduleName);
 
         if (!extName.length) {
           extName = '.js';
