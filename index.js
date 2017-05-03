@@ -313,9 +313,7 @@ function getTools (_this, options) {
       port: 33211,
       baseURL: 'http://localhost:33211',
       logging: {
-        category: "test",
-        minLevel: 'DEBUG',
-        appenders: [],
+        appenders: []
       },
       db: {
         main: {
