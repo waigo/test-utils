@@ -312,11 +312,11 @@ function getTools (_this, options) {
     config = _.extend({
       port: 33211,
       baseURL: 'http://localhost:33211',
-      // logging: {
-      //   category: "test",
-      //   minLevel: 'DEBUG',
-      //   appenders: [],
-      // },
+      logging: {
+        category: "test",
+        minLevel: 'DEBUG',
+        appenders: [],
+      },
       db: {
         main: {
           type: 'rethinkdb',
@@ -374,18 +374,8 @@ function getTools (_this, options) {
     })
   }
 
-  const extra = options.extraDataAndMethods;
-
-  for (const k in extra) {
-    tools[k] = _.isFunction(extra[k])
-      ? genomatic.bind(extra[k], _this)
-      : extra[k];
-  }
-
   return tools;
 };
-
-
 
 
 exports.mocha = function(_module, waigo, options) {
