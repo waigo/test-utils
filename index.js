@@ -372,6 +372,17 @@ function getTools (_this, options) {
     })
   }
 
+
+  /**
+   * Check that given generator function or promise throws given error.
+   *
+   * @param  {*} genOrPromiseFn
+   * @return {Promise}
+   */
+  tools.mustThrow = function *(genOrPromiseFn, errorMsg) {
+    yield tools.awaitAsync(genOrPromiseFn).must.reject.with.error(errorMsg)
+  }
+
   return tools;
 };
 
